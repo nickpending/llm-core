@@ -1,63 +1,49 @@
-"""Tests for pricing.py — cost estimation from pricing.toml.
+"""Tests for pricing.py — cost estimation from litellm pricing data.
 
 Covers:
-- SC-7: correct cost calculation for known model
-- SC-7: missing pricing file returns None (never raises)
+- SC-7: correct cost calculation for known model (bundled JSON)
+- SC-7: versioned model name resolves correctly
+- Empty pricing data returns None (never raises)
 - Unknown model returns None
-- LLM_CORE_CONFIG_DIR env var isolation
 """
 
-import tempfile
-from pathlib import Path
+from __future__ import annotations
 
 import pytest
 
+from llm_core import pricing
 from llm_core.pricing import estimate_cost
 
-PRICING_TOML_CONTENT = """\
-[models."gpt-4.1-mini"]
-input = 0.40
-output = 1.60
-"""
 
+def test_known_model_returns_correct_cost() -> None:
+    """SC-7: gpt-4.1-mini pricing from bundled litellm data."""
+    cost = estimate_cost("gpt-4.1-mini", 1000, 500)
 
-def test_known_model_returns_correct_cost(monkeypatch: pytest.MonkeyPatch) -> None:
-    """SC-7: gpt-4.1-mini, 1000 input + 500 output tokens = 0.0012 USD."""
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        pricing_file = Path(tmp_dir) / "pricing.toml"
-        pricing_file.write_text(PRICING_TOML_CONTENT)
-
-        monkeypatch.setenv("LLM_CORE_CONFIG_DIR", tmp_dir)
-
-        cost = estimate_cost("gpt-4.1-mini", 1000, 500)
-
-    # 1000/1_000_000 * 0.40 + 500/1_000_000 * 1.60 = 0.0004 + 0.0008 = 0.0012
+    # input_cost_per_token: 4e-07, output_cost_per_token: 1.6e-06
+    # 1000 * 4e-07 + 500 * 1.6e-06 = 0.0004 + 0.0008 = 0.0012
+    assert cost is not None
     assert cost == pytest.approx(0.0012)
 
 
-def test_missing_pricing_file_returns_none(monkeypatch: pytest.MonkeyPatch) -> None:
-    """SC-7: No pricing.toml (write blocked) → estimate_cost returns None."""
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        # Make dir read-only so pricing.toml can't be written
-        Path(tmp_dir).chmod(0o444)
-        monkeypatch.setenv("LLM_CORE_CONFIG_DIR", tmp_dir)
+def test_versioned_model_name_resolves() -> None:
+    """SC-7: Provider-returned versioned name resolves in pricing data."""
+    cost = estimate_cost("gpt-4.1-mini-2025-04-14", 1000, 500)
 
-        try:
-            cost = estimate_cost("gpt-4.1-mini", 1000, 500)
-        finally:
-            Path(tmp_dir).chmod(0o755)  # Restore for cleanup
-
-    assert cost is None, "Missing pricing file must return None, not raise"
+    assert cost is not None
+    assert cost == pytest.approx(0.0012)
 
 
-def test_unknown_model_returns_none(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Unknown model not in pricing.toml returns None."""
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        pricing_file = Path(tmp_dir) / "pricing.toml"
-        pricing_file.write_text(PRICING_TOML_CONTENT)
+def test_empty_pricing_returns_none(monkeypatch: pytest.MonkeyPatch) -> None:
+    """SC-7: Empty pricing data returns None, never raises."""
+    monkeypatch.setattr(pricing, "_cache", {})
 
-        monkeypatch.setenv("LLM_CORE_CONFIG_DIR", tmp_dir)
+    cost = estimate_cost("gpt-4.1-mini", 1000, 500)
 
-        cost = estimate_cost("unknown-model-xyz", 1000, 500)
+    assert cost is None
+
+
+def test_unknown_model_returns_none() -> None:
+    """Unknown model not in pricing data returns None."""
+    cost = estimate_cost("unknown-model-xyz-999", 1000, 500)
 
     assert cost is None
