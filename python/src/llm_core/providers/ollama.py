@@ -18,6 +18,14 @@ from ..exceptions import ProviderError
 from ..types import AdapterRequest, AdapterResponse
 
 
+def health_check_config(base_url: str, api_key: str | None) -> tuple[str, dict[str, str]]:
+    """Return the health check endpoint URL and headers for Ollama.
+
+    Uses the /api/tags endpoint. No auth required.
+    """
+    return f"{base_url}/api/tags", {}
+
+
 def complete(request: AdapterRequest) -> AdapterResponse:
     """Execute a completion request against the Ollama Generate API."""
     body: dict[str, object] = {

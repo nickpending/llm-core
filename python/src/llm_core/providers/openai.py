@@ -14,6 +14,15 @@ from ..exceptions import ProviderError
 from ..types import AdapterRequest, AdapterResponse
 
 
+def health_check_config(base_url: str, api_key: str | None) -> tuple[str, dict[str, str]]:
+    """Return the health check endpoint URL and headers for OpenAI.
+
+    Uses the /models endpoint with Bearer token auth.
+    """
+    headers: dict[str, str] = {"Authorization": f"Bearer {api_key or ''}"}
+    return f"{base_url}/models", headers
+
+
 def complete(request: AdapterRequest) -> AdapterResponse:
     """Execute a completion request against the OpenAI Chat Completions API."""
     messages: list[dict[str, str]] = []

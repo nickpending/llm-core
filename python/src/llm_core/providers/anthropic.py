@@ -20,6 +20,18 @@ ANTHROPIC_API_VERSION = "2023-06-01"
 DEFAULT_MAX_TOKENS = 8192
 
 
+def health_check_config(base_url: str, api_key: str | None) -> tuple[str, dict[str, str]]:
+    """Return the health check endpoint URL and headers for Anthropic.
+
+    Uses the /models endpoint with API key and version headers.
+    """
+    headers: dict[str, str] = {
+        "x-api-key": api_key or "",
+        "anthropic-version": ANTHROPIC_API_VERSION,
+    }
+    return f"{base_url}/models", headers
+
+
 def complete(request: AdapterRequest) -> AdapterResponse:
     """Execute a completion request against the Anthropic Messages API."""
     body: dict[str, object] = {

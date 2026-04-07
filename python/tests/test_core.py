@@ -72,11 +72,11 @@ def _openai_success_body(
 
 
 def test_public_api_exports_all_required_functions() -> None:
-    """INV-005: llm_core package exports all 9 required public functions.
+    """INV-005: llm_core package exports all 8 required public functions.
 
-    __init__.py exports 9 names: complete, health_check, resolve_service,
-    load_services, list_services, estimate_cost, extract_json, is_truncated,
-    update_pricing.
+    __init__.py exports 8 names: complete, health_check, resolve_service,
+    load_services, list_services, estimate_cost, extract_json, is_truncated.
+    (update_pricing removed — pricing.py no longer fetches from GitHub.)
     """
     import llm_core
 
@@ -89,7 +89,6 @@ def test_public_api_exports_all_required_functions() -> None:
         "estimate_cost",
         "extract_json",
         "is_truncated",
-        "update_pricing",
     ]
     missing = [name for name in required if not hasattr(llm_core, name)]
     assert not missing, f"llm_core missing exports: {missing}"
@@ -168,11 +167,19 @@ def test_complete_populates_cost_for_known_model(
 ) -> None:
     """HIGH: complete() cost field is populated from estimate_cost() for known model.
 
-    gpt-4.1-mini is in the bundled litellm pricing data. If cost wiring breaks
+    gpt-4.1-mini pricing from pricing.toml. If cost wiring breaks
     (e.g., estimate_cost() not called, or wrong model passed), cost is silently
     None and cost observability regresses. This test catches that regression.
     """
     monkeypatch.setenv("LLM_CORE_CONFIG_DIR", str(tmp_path))
+
+    # Write pricing.toml so estimate_cost can find the model
+    (tmp_path / "pricing.toml").write_text('[models."gpt-4.1-mini"]\ninput = 0.40\noutput = 1.60\n')
+
+    # Reset pricing cache so it reads from tmp_path
+    import llm_core.pricing as pricing_mod
+
+    monkeypatch.setattr(pricing_mod, "_cache", None)
 
     fake_body = _openai_success_body(
         text="Hello",

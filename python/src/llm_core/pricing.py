@@ -1,27 +1,24 @@
-"""Cost estimation from litellm model pricing data.
+"""Cost estimation from static pricing.toml configuration.
 
-Loads pricing rates (cost per token) from a local JSON file sourced from
-litellm's model_prices_and_context_window.json. Estimates cost from token counts.
-Pricing is best-effort: unknown model returns None.
+Loads pricing rates (cost per 1M tokens) from ~/.config/llm-core/pricing.toml.
+Estimates cost from token counts. Pricing is best-effort: unknown model returns None.
 
-On first use, fetches pricing data from GitHub if no local copy exists.
-Call update_pricing() to refresh with the latest data.
+The pricing.toml format uses per-1M-token rates:
+
+    [models."gpt-4.1-mini"]
+    input = 0.40    # USD per 1M tokens
+    output = 1.60   # USD per 1M tokens
 """
 
 from __future__ import annotations
 
-import json
 import os
+import tomllib
 from pathlib import Path
 
-import httpx
+_cache: dict[str, dict[str, float]] | None = None
 
-_cache: dict[str, dict[str, object]] | None = None
-
-_PRICING_FILENAME = "model_prices.json"
-_PRICING_URL = (
-    "https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json"
-)
+_PRICING_FILENAME = "pricing.toml"
 
 
 def _get_config_dir() -> Path:
@@ -36,35 +33,15 @@ def _get_config_dir() -> Path:
 
 
 def _get_pricing_path() -> Path:
-    """Return the path to the local pricing JSON file."""
+    """Return the path to the local pricing TOML file."""
     return _get_config_dir() / _PRICING_FILENAME
 
 
-def _fetch_pricing(pricing_path: Path) -> dict[str, dict[str, object]]:
-    """Fetch pricing data from GitHub and save locally.
+def _load_pricing() -> dict[str, dict[str, float]]:
+    """Load pricing data from pricing.toml.
 
-    Returns the parsed data on success, empty dict on any failure.
-    """
-    try:
-        with httpx.Client(timeout=30.0) as client:
-            response = client.get(_PRICING_URL)
-            response.raise_for_status()
-
-        data = response.json()
-        if not isinstance(data, dict):
-            return {}
-
-        pricing_path.parent.mkdir(parents=True, exist_ok=True)
-        pricing_path.write_text(json.dumps(data))
-        return data
-    except (httpx.HTTPError, OSError, ValueError):
-        return {}
-
-
-def _load_pricing() -> dict[str, dict[str, object]]:
-    """Load pricing data from local JSON, fetching from GitHub if missing.
-
-    Caches the result for subsequent calls. Returns empty dict on any error.
+    Caches the result for subsequent calls. Returns empty dict if file
+    missing or malformed. Never makes network calls.
     """
     global _cache
 
@@ -73,19 +50,17 @@ def _load_pricing() -> dict[str, dict[str, object]]:
 
     pricing_path = _get_pricing_path()
 
-    # Try reading local file first
     try:
         if pricing_path.exists():
-            raw = pricing_path.read_text()
-            data = json.loads(raw)
-            _cache = data if isinstance(data, dict) else {}
+            with pricing_path.open("rb") as f:
+                data = tomllib.load(f)
+            models = data.get("models", {})
+            _cache = models if isinstance(models, dict) else {}
             return _cache
-    except (OSError, json.JSONDecodeError):
+    except (OSError, tomllib.TOMLDecodeError):
         pass
 
-    # No local file or read failed — fetch from GitHub
-    data = _fetch_pricing(pricing_path)
-    _cache = data if isinstance(data, dict) else {}
+    _cache = {}
     return _cache
 
 
@@ -93,7 +68,7 @@ def estimate_cost(model: str, tokens_input: int, tokens_output: int) -> float | 
     """Estimate cost in USD from token counts and model name.
 
     Returns None if pricing data unavailable for the model.
-    Uses per-token rates from litellm pricing data.
+    Rates in pricing.toml are per-1M-tokens; converted to per-token here.
     """
     pricing = _load_pricing()
     entry = pricing.get(model)
@@ -102,36 +77,13 @@ def estimate_cost(model: str, tokens_input: int, tokens_output: int) -> float | 
         return None
 
     try:
-        input_rate = float(entry.get("input_cost_per_token", 0))
-        output_rate = float(entry.get("output_cost_per_token", 0))
+        input_rate = float(entry.get("input", 0))
+        output_rate = float(entry.get("output", 0))
     except (TypeError, ValueError):
         return None
 
     if input_rate == 0 and output_rate == 0:
         return None
 
-    return tokens_input * input_rate + tokens_output * output_rate
-
-
-def update_pricing() -> None:
-    """Fetch the latest pricing data from litellm's GitHub repository.
-
-    Overwrites the local pricing file and invalidates the cache.
-    Raises on network or write errors.
-    """
-    global _cache
-
-    with httpx.Client(timeout=30.0) as client:
-        response = client.get(_PRICING_URL)
-        response.raise_for_status()
-
-    data = response.json()
-    if not isinstance(data, dict):
-        msg = "Pricing data is not a JSON object"
-        raise ValueError(msg)
-
-    pricing_path = _get_pricing_path()
-    pricing_path.parent.mkdir(parents=True, exist_ok=True)
-    pricing_path.write_text(json.dumps(data))
-
-    _cache = None
+    # Convert per-1M-token rates to per-token
+    return tokens_input * (input_rate / 1_000_000) + tokens_output * (output_rate / 1_000_000)

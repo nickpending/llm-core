@@ -117,18 +117,9 @@ def health_check(service: str | None = None) -> None:
     svc = resolve_service(service)
     api_key = load_api_key(svc)
 
-    # Provider-specific lightweight endpoint
-    if svc.adapter == "anthropic":
-        url = f"{svc.base_url}/models"
-        headers = {"x-api-key": api_key or "", "anthropic-version": "2023-06-01"}
-    elif svc.adapter == "openai":
-        url = f"{svc.base_url}/models"
-        headers = {"Authorization": f"Bearer {api_key or ''}"}
-    elif svc.adapter == "ollama":
-        url = f"{svc.base_url}/api/tags"
-        headers = {}
-    else:
-        raise ValueError(f"Unknown adapter: {svc.adapter}")
+    # Provider-specific lightweight endpoint (delegated to adapter)
+    adapter = get_adapter(svc.adapter)
+    url, headers = adapter.health_check_config(svc.base_url, api_key)
 
     try:
         with httpx.Client(timeout=10.0) as client:
