@@ -18,15 +18,7 @@ wheels = [
 [[package]]
 name = "apiconf"
 version = "0.2.0"
-source = { editable = "../../apiconf/python" }
-
-[package.metadata]
-requires-dist = [
-    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.10" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.4" },
-]
-provides-extras = ["dev"]
+source = { git = "ssh://git@github.com/nickpending/apiconf?subdirectory=python#3c07a6e4f1456fdf3f334ca48c47f1c36837953b" }
 
 [[package]]
 name = "certifi"
@@ -192,7 +184,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "apiconf", editable = "../../apiconf/python" },
+    { name = "apiconf", git = "ssh://git@github.com/nickpending/apiconf?subdirectory=python" },
     { name = "httpx", specifier = ">=0.27" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.10" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
