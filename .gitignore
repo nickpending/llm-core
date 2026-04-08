@@ -98,6 +98,7 @@ package-lock.json
 *.tsbuildinfo
 .bun/
 
+
 # Sable agent state
 .sable/
 
@@ -108,6 +109,7 @@ Auto Run Docs/
 Icon[]
 downloads/
 lib/
+!typescript/lib/
 lib64/
 parts/
 var/

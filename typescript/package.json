@@ -1,0 +1,55 @@
+{
+  "name": "@voidwire/llm-core",
+  "version": "0.4.0",
+  "description": "Shared LLM transport layer with service-based routing",
+  "type": "module",
+  "main": "./index.ts",
+  "bin": {
+    "llm-core": "./cli.ts"
+  },
+  "exports": {
+    ".": "./index.ts",
+    "./cli": "./cli.ts"
+  },
+  "files": [
+    "index.ts",
+    "cli.ts",
+    "lib/**/*.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "keywords": [
+    "llm",
+    "anthropic",
+    "openai",
+    "ollama",
+    "cli",
+    "llcli"
+  ],
+  "author": "nickpending <nickpending@users.noreply.github.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nickpending/llm-core.git",
+    "directory": "typescript"
+  },
+  "homepage": "https://github.com/nickpending/llm-core/tree/main/typescript#readme",
+  "bugs": {
+    "url": "https://github.com/nickpending/llm-core/issues"
+  },
+  "engines": {
+    "bun": ">=1.0.0"
+  },
+  "dependencies": {
+    "@voidwire/apiconf": "^0.1.0",
+    "smol-toml": "1.6.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.8",
+    "bun-types": "latest"
+  }
+}
