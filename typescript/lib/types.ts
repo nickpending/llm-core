@@ -27,6 +27,8 @@ export interface ServiceConfig {
   base_url: string;
   key_required?: boolean; // Default true, false for ollama
   default_model?: string; // Used when caller doesn't specify a model
+  app_title?: string; // Sent as X-Title header (OpenRouter app attribution)
+  app_url?: string; // Sent as HTTP-Referer header (OpenRouter app attribution)
 }
 
 export interface ServiceMap {
@@ -44,6 +46,8 @@ export interface AdapterRequest {
   temperature?: number;
   maxTokens?: number;
   json?: boolean;
+  appTitle?: string; // Sent as X-Title header (OpenRouter app attribution)
+  appUrl?: string; // Sent as HTTP-Referer header (OpenRouter app attribution)
 }
 
 export interface AdapterResponse {

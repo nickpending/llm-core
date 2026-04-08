@@ -78,6 +78,8 @@ def complete(
         temperature=temperature,
         max_tokens=max_tokens,
         json=json,
+        app_title=svc.app_title,
+        app_url=svc.app_url,
     )
 
     # 6. Call provider with retry

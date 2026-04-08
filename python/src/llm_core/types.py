@@ -53,6 +53,8 @@ class ServiceConfig:
     key: str | None = None
     key_required: bool = True
     default_model: str | None = None
+    app_title: str | None = None
+    app_url: str | None = None
 
 
 @dataclass
@@ -67,6 +69,8 @@ class AdapterRequest:
     temperature: float | None = None
     max_tokens: int | None = None
     json: bool = False
+    app_title: str | None = None
+    app_url: str | None = None
 
 
 @dataclass

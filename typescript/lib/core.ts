@@ -19,7 +19,9 @@ import { withRetry } from "./retry";
 import { resolveService } from "./services";
 import type { CompleteOptions, CompleteResult } from "./types";
 
-export async function complete(options: CompleteOptions): Promise<CompleteResult> {
+export async function complete(
+  options: CompleteOptions,
+): Promise<CompleteResult> {
   const startTime = Date.now();
 
   // 1. Resolve service configuration
@@ -48,13 +50,19 @@ export async function complete(options: CompleteOptions): Promise<CompleteResult
     temperature: options.temperature,
     maxTokens: options.maxTokens,
     json: options.json,
+    appTitle: service.app_title,
+    appUrl: service.app_url,
   };
 
   // 5. Call provider with retry
   const response = await withRetry(() => adapter.complete(adapterRequest));
 
   // 6. Estimate cost
-  const cost = estimateCost(response.model, response.tokensInput, response.tokensOutput);
+  const cost = estimateCost(
+    response.model,
+    response.tokensInput,
+    response.tokensOutput,
+  );
 
   // 7. Return normalized envelope
   const durationMs = Date.now() - startTime;

@@ -146,6 +146,8 @@ def load_services() -> ServiceMap:
             key=entry.get("key"),
             key_required=entry.get("key_required", True),
             default_model=entry.get("default_model"),
+            app_title=entry.get("app_title"),
+            app_url=entry.get("app_url"),
         )
 
     result: ServiceMap = {

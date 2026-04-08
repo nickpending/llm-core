@@ -47,6 +47,10 @@ def complete(request: AdapterRequest) -> AdapterResponse:
     }
     if request.api_key is not None:
         headers["Authorization"] = f"Bearer {request.api_key}"
+    if request.app_title is not None:
+        headers["X-Title"] = request.app_title
+    if request.app_url is not None:
+        headers["HTTP-Referer"] = request.app_url
 
     with httpx.Client(timeout=60.0) as client:
         response = client.post(f"{request.base_url}/chat/completions", headers=headers, json=body)
