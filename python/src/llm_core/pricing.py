@@ -102,8 +102,8 @@ def estimate_cost(model: str, tokens_input: int, tokens_output: int) -> float | 
         return None
 
     try:
-        input_rate = float(entry.get("input_cost_per_token", 0))
-        output_rate = float(entry.get("output_cost_per_token", 0))
+        input_rate = float(entry.get("input_cost_per_token", 0))  # type: ignore[arg-type]
+        output_rate = float(entry.get("output_cost_per_token", 0))  # type: ignore[arg-type]
     except (TypeError, ValueError):
         return None
 
