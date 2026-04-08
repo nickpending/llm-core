@@ -18,7 +18,7 @@ wheels = [
 [[package]]
 name = "apiconf"
 version = "0.2.0"
-source = { git = "ssh://git@github.com/nickpending/apiconf?subdirectory=python#3c07a6e4f1456fdf3f334ca48c47f1c36837953b" }
+source = { git = "https://github.com/nickpending/apiconf?subdirectory=python#6fd244a5041ac714cb21c48e41cf46b8b4fbba76" }
 
 [[package]]
 name = "certifi"
@@ -184,7 +184,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "apiconf", git = "ssh://git@github.com/nickpending/apiconf?subdirectory=python" },
+    { name = "apiconf", git = "https://github.com/nickpending/apiconf?subdirectory=python" },
     { name = "httpx", specifier = ">=0.27" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.10" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },

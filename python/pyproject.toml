@@ -7,7 +7,7 @@ license = "MIT"
 dependencies = ["apiconf>=0.2.0", "httpx>=0.27"]
 
 [tool.uv.sources]
-apiconf = { git = "ssh://git@github.com/nickpending/apiconf", subdirectory = "python" }
+apiconf = { git = "https://github.com/nickpending/apiconf", subdirectory = "python" }
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "ruff>=0.4", "mypy>=1.10"]
