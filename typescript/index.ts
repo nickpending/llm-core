@@ -11,6 +11,7 @@
 export { complete, healthCheck } from "./lib/core";
 export { embed } from "./lib/embed";
 export { extractJson, isTruncated } from "./lib/helpers";
+export { updatePricing } from "./lib/pricing";
 export { listServices, loadServices, resolveService } from "./lib/services";
 export type {
   CompleteOptions,

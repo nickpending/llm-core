@@ -10,8 +10,8 @@
  *   const result = await embed({ text: "hello", prefix: "search_query" });
  */
 
-import type { EmbedOptions, EmbedResult } from "./types";
 import { resolveService } from "./services";
+import type { EmbedOptions, EmbedResult } from "./types";
 
 export async function embed(options: EmbedOptions): Promise<EmbedResult> {
   const startTime = Date.now();
@@ -34,21 +34,12 @@ export async function embed(options: EmbedOptions): Promise<EmbedResult> {
     });
   } catch (err) {
     if (err instanceof DOMException && err.name === "TimeoutError") {
-      throw new Error(
-        `Embed server not running at ${baseUrl}. Start with: llm embed-server start`,
-      );
+      throw new Error(`Embed server not running at ${baseUrl}. Start with: llm embed-server start`);
     }
-    if (
-      err instanceof TypeError &&
-      (err as NodeJS.ErrnoException).code === "ECONNREFUSED"
-    ) {
-      throw new Error(
-        `Embed server not running at ${baseUrl}. Start with: llm embed-server start`,
-      );
+    if (err instanceof TypeError && (err as NodeJS.ErrnoException).code === "ECONNREFUSED") {
+      throw new Error(`Embed server not running at ${baseUrl}. Start with: llm embed-server start`);
     }
-    throw new Error(
-      `Embed server not running at ${baseUrl}. Start with: llm embed-server start`,
-    );
+    throw new Error(`Embed server not running at ${baseUrl}. Start with: llm embed-server start`);
   }
 
   // 3. Validate response
@@ -64,9 +55,7 @@ export async function embed(options: EmbedOptions): Promise<EmbedResult> {
   };
 
   if (!Array.isArray(data.embedding)) {
-    throw new Error(
-      "Embed server returned invalid response: missing embedding array",
-    );
+    throw new Error("Embed server returned invalid response: missing embedding array");
   }
 
   // 4. Return normalized envelope

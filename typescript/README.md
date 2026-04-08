@@ -66,6 +66,7 @@ llm-core --service openai --model gpt-4.1-mini "Explain REST APIs"
 | `loadServices()` | Load all services from `services.toml` |
 | `listServices()` | Get service names as a string array |
 | `resolveService(name)` | Resolve a named service to its config |
+| `updatePricing()` | Fetch latest model pricing from LiteLLM and write `pricing.toml` |
 
 ### Types
 
@@ -105,6 +106,19 @@ default_model = "llama3"
 ```
 
 API keys: managed by [@voidwire/apiconf](https://github.com/nickpending/apiconf) at `~/.config/apiconf/config.toml`.
+
+### Pricing
+
+Cost estimation uses `~/.config/llm-core/pricing.toml` with per-1M-token rates. Populate it from LiteLLM's community pricing database:
+
+```typescript
+import { updatePricing } from "@voidwire/llm-core";
+
+const { updated } = await updatePricing();
+console.log(`${updated} models loaded`);
+```
+
+After this, `complete()` will include cost estimates in `result.cost`. Unknown models return `null`.
 
 ## Provider Adapters
 
