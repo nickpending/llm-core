@@ -66,9 +66,7 @@ export async function withRetry<T>(
 
       // Don't delay after last attempt
       if (attempt < opts.maxAttempts - 1) {
-        await sleep(
-          opts.delays[attempt] || opts.delays[opts.delays.length - 1],
-        );
+        await sleep(opts.delays[attempt] || opts.delays[opts.delays.length - 1]);
       }
     }
   }

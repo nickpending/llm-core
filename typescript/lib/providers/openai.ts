@@ -25,7 +25,7 @@ export async function complete(req: AdapterRequest): Promise<AdapterResponse> {
     "Content-Type": "application/json",
   };
   if (req.apiKey) {
-    headers["Authorization"] = `Bearer ${req.apiKey}`;
+    headers.Authorization = `Bearer ${req.apiKey}`;
   }
 
   const response = await fetch(`${req.baseUrl}/chat/completions`, {

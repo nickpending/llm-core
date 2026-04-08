@@ -14,10 +14,9 @@
  *   const cost = estimateCost("claude-3-5-sonnet-20241022", 1000, 500);
  */
 
-import { readFileSync, existsSync } from "fs";
-import { parse as parseToml } from "smol-toml";
-import { join } from "path";
-import { homedir } from "os";
+import { existsSync, readFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
 
 const CONFIG_DIR = join(homedir(), ".config", "llm-core");
 const PRICING_PATH = join(CONFIG_DIR, "pricing.toml");
@@ -48,7 +47,7 @@ function loadPricing(): PricingRates {
 
   try {
     const content = readFileSync(PRICING_PATH, "utf-8");
-    cachedPricing = parseToml(content) as unknown as PricingRates;
+    cachedPricing = Bun.TOML.parse(content) as unknown as PricingRates;
     return cachedPricing;
   } catch {
     cachedPricing = { models: {} };
@@ -88,7 +87,5 @@ export function estimateCost(
  * For now, pricing.toml must be manually populated.
  */
 export async function updatePricing(): Promise<{ updated: number }> {
-  throw new Error(
-    "updatePricing() not yet implemented - manual pricing.toml population required",
-  );
+  throw new Error("updatePricing() not yet implemented - manual pricing.toml population required");
 }

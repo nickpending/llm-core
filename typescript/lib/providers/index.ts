@@ -7,8 +7,8 @@
 
 import type { ProviderAdapter } from "../types";
 import * as anthropic from "./anthropic";
-import * as openai from "./openai";
 import * as ollama from "./ollama";
+import * as openai from "./openai";
 
 const ADAPTERS: Record<string, ProviderAdapter> = {
   anthropic,
@@ -19,9 +19,7 @@ const ADAPTERS: Record<string, ProviderAdapter> = {
 export function getAdapter(name: string): ProviderAdapter {
   const adapter = ADAPTERS[name];
   if (!adapter) {
-    throw new Error(
-      `Unknown adapter: "${name}". Available: ${Object.keys(ADAPTERS).join(", ")}`,
-    );
+    throw new Error(`Unknown adapter: "${name}". Available: ${Object.keys(ADAPTERS).join(", ")}`);
   }
   return adapter;
 }
