@@ -30,7 +30,7 @@ export async function complete(req: AdapterRequest): Promise<AdapterResponse> {
     headers.Authorization = `Bearer ${req.apiKey}`;
   }
   if (req.appTitle) {
-    headers["X-Title"] = req.appTitle;
+    headers["X-OpenRouter-Title"] = req.appTitle;
   }
   if (req.appUrl) {
     headers["HTTP-Referer"] = req.appUrl;

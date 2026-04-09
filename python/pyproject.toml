@@ -1,6 +1,6 @@
 [project]
 name = "llm-core"
-version = "0.3.0"
+version = "0.3.1"
 description = "Lightweight LLM completion library with provider adapters and service routing"
 requires-python = ">=3.11"
 license = "MIT"
