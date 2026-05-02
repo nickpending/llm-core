@@ -59,7 +59,9 @@ export function loadServices(): ServiceMap {
       writeFileSync(SERVICES_PATH, DEFAULT_SERVICES_TOML, "utf-8");
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      throw new Error(`Failed to create default services.toml at ${SERVICES_PATH}: ${message}`);
+      throw new Error(
+        `Failed to create default services.toml at ${SERVICES_PATH}: ${message}`,
+      );
     }
   }
 
@@ -81,11 +83,19 @@ export function loadServices(): ServiceMap {
 
   // Validate required fields
   if (typeof parsed.default_service !== "string") {
-    throw new Error(`Invalid config: missing or non-string "default_service" in ${SERVICES_PATH}`);
+    throw new Error(
+      `Invalid config: missing or non-string "default_service" in ${SERVICES_PATH}`,
+    );
   }
 
-  if (!parsed.services || typeof parsed.services !== "object" || Array.isArray(parsed.services)) {
-    throw new Error(`Invalid config: missing or invalid [services] section in ${SERVICES_PATH}`);
+  if (
+    !parsed.services ||
+    typeof parsed.services !== "object" ||
+    Array.isArray(parsed.services)
+  ) {
+    throw new Error(
+      `Invalid config: missing or invalid [services] section in ${SERVICES_PATH}`,
+    );
   }
 
   const services = parsed.services as Record<string, unknown>;
@@ -93,7 +103,9 @@ export function loadServices(): ServiceMap {
   // Validate each service entry
   for (const [name, entry] of Object.entries(services)) {
     if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
-      throw new Error(`Invalid config: service "${name}" must be a table in ${SERVICES_PATH}`);
+      throw new Error(
+        `Invalid config: service "${name}" must be a table in ${SERVICES_PATH}`,
+      );
     }
     const svc = entry as Record<string, unknown>;
     if (typeof svc.adapter !== "string") {
@@ -134,7 +146,9 @@ export function resolveService(name?: string): ServiceConfig {
   const service = map.services[serviceName];
   if (!service) {
     const available = Object.keys(map.services).join(", ");
-    throw new Error(`Unknown service: "${serviceName}". Available: [${available}]`);
+    throw new Error(
+      `Unknown service: "${serviceName}". Available: [${available}]`,
+    );
   }
 
   return service;

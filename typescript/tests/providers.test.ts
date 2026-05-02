@@ -30,7 +30,12 @@ const { complete: openaiComplete } = await import(
 const { complete: ollamaComplete } = await import(
   join(import.meta.dir, "../lib/providers/ollama.ts")
 );
-const { getAdapter } = await import(join(import.meta.dir, "../lib/providers/index.ts"));
+const { parseClaudeJsonResponse } = await import(
+  join(import.meta.dir, "../lib/providers/claude-cli.ts")
+);
+const { getAdapter } = await import(
+  join(import.meta.dir, "../lib/providers/index.ts")
+);
 
 // Helper: create a mock fetch that returns a JSON response
 function mockFetch(status: number, body: unknown): typeof fetch {
@@ -40,7 +45,8 @@ function mockFetch(status: number, body: unknown): typeof fetch {
       ok: isOk,
       status,
       json: async () => body,
-      text: async () => (typeof body === "string" ? body : JSON.stringify(body)),
+      text: async () =>
+        typeof body === "string" ? body : JSON.stringify(body),
     } as Response;
   };
 }
@@ -185,6 +191,112 @@ describe("ollama adapter", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Claude CLI adapter (parser only — subprocess path is integration-tested manually)
+// ---------------------------------------------------------------------------
+
+describe("claude-cli parseClaudeJsonResponse()", () => {
+  it("extracts result text verbatim and reports the resolved model from modelUsage (INV-001)", () => {
+    const envelope = {
+      type: "result",
+      subtype: "success",
+      is_error: false,
+      result: "  YES  ", // spaces intentional — must not be trimmed
+      stop_reason: "end_turn",
+      usage: { input_tokens: 2024, output_tokens: 274 },
+      modelUsage: {
+        "claude-haiku-4-5-20251001": { inputTokens: 2024, outputTokens: 274 },
+      },
+    };
+
+    const result = parseClaudeJsonResponse(JSON.stringify(envelope), "haiku");
+
+    expect(result.text).toBe("  YES  "); // INV-001
+    expect(result.model).toBe("claude-haiku-4-5-20251001"); // resolved, not the alias
+    expect(result.tokensInput).toBe(2024);
+    expect(result.tokensOutput).toBe(274);
+    expect(result.finishReason).toBe("stop");
+  });
+
+  it("falls back to the caller's model alias when modelUsage is absent", () => {
+    const envelope = {
+      type: "result",
+      subtype: "success",
+      is_error: false,
+      result: "hi",
+      stop_reason: "end_turn",
+      usage: { input_tokens: 5, output_tokens: 1 },
+    };
+
+    const result = parseClaudeJsonResponse(JSON.stringify(envelope), "haiku");
+
+    expect(result.model).toBe("haiku");
+  });
+
+  it("maps stop_reason 'max_tokens' to finishReason 'max_tokens'", () => {
+    const envelope = {
+      type: "result",
+      subtype: "success",
+      is_error: false,
+      result: "truncated...",
+      stop_reason: "max_tokens",
+      usage: { input_tokens: 1, output_tokens: 100 },
+    };
+
+    const result = parseClaudeJsonResponse(JSON.stringify(envelope), "haiku");
+
+    expect(result.finishReason).toBe("max_tokens");
+  });
+
+  it("throws on non-JSON stdout with a clear remediation hint", () => {
+    expect(() => parseClaudeJsonResponse("not json at all", "haiku")).toThrow(
+      "non-JSON output",
+    );
+  });
+
+  it("throws when envelope reports an error subtype", () => {
+    const envelope = {
+      type: "result",
+      subtype: "error",
+      is_error: true,
+      result: "auth failed",
+    };
+
+    expect(() =>
+      parseClaudeJsonResponse(JSON.stringify(envelope), "haiku"),
+    ).toThrow("error envelope");
+  });
+
+  it("throws when result field is missing or non-string", () => {
+    const envelope = {
+      type: "result",
+      subtype: "success",
+      is_error: false,
+      // result intentionally omitted
+    };
+
+    expect(() =>
+      parseClaudeJsonResponse(JSON.stringify(envelope), "haiku"),
+    ).toThrow("missing result field");
+  });
+
+  it("falls back to 0 when token counts are missing", () => {
+    const envelope = {
+      type: "result",
+      subtype: "success",
+      is_error: false,
+      result: "x",
+      stop_reason: "end_turn",
+      // usage intentionally omitted
+    };
+
+    const result = parseClaudeJsonResponse(JSON.stringify(envelope), "haiku");
+
+    expect(result.tokensInput).toBe(0);
+    expect(result.tokensOutput).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Adapter registry
 // ---------------------------------------------------------------------------
 
@@ -192,5 +304,10 @@ describe("getAdapter()", () => {
   it("throws descriptive error for unknown adapter name instead of returning undefined", () => {
     expect(() => getAdapter("nonexistent")).toThrow('"nonexistent"');
     expect(() => getAdapter("nonexistent")).toThrow("Available:");
+  });
+
+  it("registers claude-cli adapter so subscription routing is available", () => {
+    const adapter = getAdapter("claude-cli");
+    expect(typeof adapter.complete).toBe("function");
   });
 });

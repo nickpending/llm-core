@@ -9,7 +9,11 @@
  *   const key = await loadApiKey(service);
  */
 
-import { ConfigNotFoundError, getKey, KeyNotFoundError } from "@voidwire/apiconf";
+import {
+  ConfigNotFoundError,
+  getKey,
+  KeyNotFoundError,
+} from "@voidwire/apiconf";
 import type { ServiceConfig } from "./types";
 
 /**
@@ -21,7 +25,9 @@ import type { ServiceConfig } from "./types";
  * Note: getKey() is synchronous internally, but loadApiKey() is async
  * for API consistency with the rest of the library.
  */
-export async function loadApiKey(service: ServiceConfig): Promise<string | null> {
+export async function loadApiKey(
+  service: ServiceConfig,
+): Promise<string | null> {
   // Services that don't require keys (e.g., ollama)
   if (service.key_required === false) {
     return null;

@@ -12,6 +12,7 @@
 import { loadApiKey } from "./config";
 import { estimateCost } from "./pricing";
 import * as anthropic from "./providers/anthropic";
+import * as claudeCli from "./providers/claude-cli";
 import { getAdapter } from "./providers/index";
 import * as ollama from "./providers/ollama";
 import * as openai from "./providers/openai";
@@ -91,6 +92,8 @@ export async function healthCheck(service?: string): Promise<void> {
     await openai.healthCheck(svc.base_url, apiKey);
   } else if (svc.adapter === "ollama") {
     await ollama.healthCheck(svc.base_url, apiKey);
+  } else if (svc.adapter === "claude-cli") {
+    await claudeCli.healthCheck(svc.base_url, apiKey);
   } else {
     throw new Error(`Unknown adapter: "${svc.adapter}"`);
   }

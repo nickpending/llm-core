@@ -62,10 +62,15 @@ export async function complete(req: AdapterRequest): Promise<AdapterResponse> {
   };
 }
 
-export async function healthCheck(baseUrl: string, _apiKey: string | null): Promise<void> {
+export async function healthCheck(
+  baseUrl: string,
+  _apiKey: string | null,
+): Promise<void> {
   const response = await fetch(`${baseUrl}/api/tags`);
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`Ollama health check failed (${response.status}): ${error}`);
+    throw new Error(
+      `Ollama health check failed (${response.status}): ${error}`,
+    );
   }
 }
