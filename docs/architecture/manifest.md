@@ -3,7 +3,7 @@ type: manifest
 project: llm-core
 generated: 2026-06-12
 source: /Users/rudy/development/projects/llm-core/docs/architecture
-reconciled_at: 0b01440cbbe42d6a357b448bfc6412bca651e03f
+reconciled_at: 9542b3065ab2ba845e279e4bb92907d3dc33e6b1
 ---
 
 # llm-core Manifest
