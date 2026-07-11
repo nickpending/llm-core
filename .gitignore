@@ -219,3 +219,11 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Agent workspace
+.corpus/
+
+# Spec Kit — ephemeral extension state only; everything else under .specify/ is committed
+.specify/extensions/.cache/
+.specify/extensions/.backup/
+.specify/extensions/*/local-config.yml
