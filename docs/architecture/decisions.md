@@ -4,13 +4,19 @@ subtype: decisions
 project: "llm-core"
 status: active
 created: "2026-04-08"
-updated: "2026-06-09"
+updated: "2026-07-11"
 tags: [architecture, decisions]
 ---
 
 # Decisions
 
 Architectural decisions and their rationale. Most recent first.
+
+## Anthropic adapter finds the text block instead of indexing content[0] (TypeScript v0.7.1)
+
+**Context:** Extended-thinking models (claude-sonnet-5, claude-opus-4, etc.) return a `type: "thinking"` content block first, followed by the `type: "text"` block. The TypeScript Anthropic adapter indexed `content[0].text` directly, so calls to these models returned the thinking trace as `CompleteResult.text` instead of the actual answer — a silent correctness bug, not a thrown error, since `content[0]` still had *a* string in some shapes.
+**Choice:** `typescript/lib/providers/anthropic.ts` now uses `data.content?.find(block => block.type === "text" && typeof block.text === "string")` to locate the answer block regardless of position, and throws `"no type:\"text\" block in content"` if none is found. Shipped as `@voidwire/llm-core` v0.7.1. Test coverage added in `typescript/tests/providers.test.ts` for the thinking-block-then-text-block shape.
+**Why:** INV-001 (verbatim text extraction) is only meaningful if the adapter extracts the *right* block. Scanning by `type` is robust to Anthropic adding more block types or reordering them; positional indexing isn't. **Not yet ported to Python** — `python/src/llm_core/providers/anthropic.py` still indexes `content[0].text` and will mis-extract on extended-thinking responses; tracked as a cross-language parity gap, not fixed in this change.
 
 ## claude-cli as its own subprocess adapter, not anthropic with a different base_url
 

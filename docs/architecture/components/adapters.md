@@ -5,7 +5,7 @@ project: "llm-core"
 component: "Provider Adapters"
 status: active
 created: "2026-04-08"
-updated: "2026-06-09"
+updated: "2026-07-11"
 tags: [architecture, components]
 ---
 
@@ -21,6 +21,7 @@ Three HTTP adapters in both TypeScript and Python, plus one subprocess adapter (
 - Endpoint: `POST /messages` (Messages API)
 - Auth: `x-api-key` header + `anthropic-version: 2023-06-01`
 - Defaults `max_tokens` to 8192 if not specified
+- TypeScript (v0.7.1+) extracts the first `type: "text"` content block via `content.find(...)` rather than indexing `content[0]` — extended-thinking models (claude-sonnet-5, claude-opus-4, etc.) return a leading `type: "thinking"` block, so blind `content[0]` indexing grabbed the thinking block instead of the answer. Throws if no `text` block is present. **Parity gap:** Python's `anthropic.py` still indexes `content[0].text` directly and has not received the equivalent fix — it will break on extended-thinking responses.
 - Normalizes `stop_reason` → `finishReason` (`end_turn` → `stop`, `max_tokens` → `max_tokens`)
 - Health check: `GET /models`
 
