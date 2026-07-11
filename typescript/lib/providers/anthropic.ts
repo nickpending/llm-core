@@ -45,10 +45,14 @@ export async function complete(req: AdapterRequest): Promise<AdapterResponse> {
 
   const data = await response.json();
 
-  // Validate response shape
-  if (!data.content?.length || typeof data.content[0].text !== "string") {
+  // Find the first text block — extended thinking models (claude-sonnet-5, claude-opus-4, etc.)
+  // return a thinking block first (type: "thinking"), followed by the text block (type: "text").
+  const textBlock = data.content?.find(
+    (block: { type: string; text?: string }) => block.type === "text" && typeof block.text === "string",
+  );
+  if (!textBlock) {
     throw new Error(
-      `Anthropic API returned unexpected response shape: missing content[0].text`,
+      `Anthropic API returned unexpected response shape: no type:"text" block in content`,
     );
   }
 
@@ -59,7 +63,7 @@ export async function complete(req: AdapterRequest): Promise<AdapterResponse> {
   }
 
   return {
-    text: data.content[0].text, // INV-001: verbatim extraction
+    text: textBlock.text, // INV-001: verbatim extraction
     model: data.model,
     tokensInput: data.usage?.input_tokens ?? 0,
     tokensOutput: data.usage?.output_tokens ?? 0,

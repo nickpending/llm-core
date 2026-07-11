@@ -89,7 +89,7 @@ describe("anthropic adapter", () => {
   it("returns normalized AdapterResponse with verbatim text (INV-001)", async () => {
     const responseText = "  The answer is 42.  "; // spaces intentional — must not be trimmed
     globalThis.fetch = mockFetch(200, {
-      content: [{ text: responseText }],
+      content: [{ type: "text", text: responseText }],
       model: "claude-3-5-sonnet-20241022",
       stop_reason: "end_turn",
       usage: { input_tokens: 10, output_tokens: 5 },
@@ -102,6 +102,27 @@ describe("anthropic adapter", () => {
     expect(result.tokensInput).toBe(10);
     expect(result.tokensOutput).toBe(5);
     expect(result.finishReason).toBe("stop"); // end_turn → stop
+  });
+
+  it("extracts the text block past a leading thinking block (extended-thinking models)", async () => {
+    // Extended-thinking models (claude-sonnet-5, claude-opus-4, …) return a `thinking`
+    // block FIRST, then the `text` block. content[0] is the thinking block, so verbatim
+    // extraction must find the first type:"text" block, not blindly read content[0].
+    const responseText = "The answer is 42.";
+    globalThis.fetch = mockFetch(200, {
+      content: [
+        { type: "thinking", thinking: "Let me reason about this…", signature: "abc" },
+        { type: "text", text: responseText },
+      ],
+      model: "claude-sonnet-5",
+      stop_reason: "end_turn",
+      usage: { input_tokens: 10, output_tokens: 5 },
+    });
+
+    const result = await anthropicComplete(BASE_ANTHROPIC_REQ);
+
+    expect(result.text).toBe(responseText); // the text block, NOT the thinking block
+    expect(result.model).toBe("claude-sonnet-5");
   });
 
   it("throws with status code on HTTP error (401)", async () => {
