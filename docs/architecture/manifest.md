@@ -1,9 +1,9 @@
 ---
 type: manifest
 project: llm-core
-generated: 2026-09-14
+generated: 2026-09-16
 source: /Users/rudy/development/projects/llm-core/docs/architecture
-reconciled_at: 8be5d8aa3f9c52961afb8a30bf07230df80db90d
+reconciled_at: 33ea78972cb946655285157fbc1558ee3f8bf196
 ---
 
 # llm-core Manifest
